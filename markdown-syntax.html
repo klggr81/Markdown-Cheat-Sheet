@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown Syntax</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;600&display=swap">
+<style>
+/* Layout: dense spec-sheet. Header bar, filter input, auto-fit grid of titled tables; syntax left, meaning + rendered result right. */
+:root {
+  --bg: #eef0f3;
+  --panel: #f8f9fb;
+  --fg: #14181f;
+  --muted: #5b6573;
+  --line: #cfd5dd;
+  --cap: #ffffff;
+  --cap-line: #b7c0cb;
+  --accent: #1f4fd8;
+  --accent-soft: #dfe7fb;
+  --warn: #9a5b00;
+  --gh: #7438c9;
+  --obs: #0f7b6c;
+  --chat: #c2255c;
+  --docs: #2b8a3e;
+  --mark: #fff1a8;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --panel: #141a22; --fg: #dde3ea; --muted: #8592a3; --line: #263040;
+    --cap: #1b2430; --cap-line: #35425a; --accent: #7fa2ff; --accent-soft: #1a2747; --warn: #e0a44a;
+    --gh: #b896ff; --obs: #4fd1b8; --chat: #f783ac; --docs: #8ce99a; --mark: #5a4a12;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --panel: #141a22; --fg: #dde3ea; --muted: #8592a3; --line: #263040;
+  --cap: #1b2430; --cap-line: #35425a; --accent: #7fa2ff; --accent-soft: #1a2747; --warn: #e0a44a;
+  --gh: #b896ff; --obs: #4fd1b8; --chat: #f783ac; --docs: #8ce99a; --mark: #5a4a12;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: 13px; line-height: 1.5;
+  padding-inline: 20px; padding-block: 24px 40px; }
+.wrap { max-width: 1280px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--fg); }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+h1 span { color: var(--accent); }
+.meta { color: var(--muted); font-size: 12px; text-align: right; }
+.bar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; padding-block: 14px; }
+.search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--panel);
+  padding: 7px 10px; min-width: 0; flex: 1 1 260px; max-width: 420px; }
+.search:focus-within { border-color: var(--accent); }
+.search label { color: var(--accent); }
+.search input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--fg); font: inherit; }
+.legend { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+/* Masonry: script deals sections in order into the shortest of N columns (N = how many 380px columns fit). */
+.grid { display: flex; gap: 16px; align-items: flex-start; }
+.col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+section { background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+h2 { margin: 0; padding: 8px 12px; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+h2 b { font-weight: 500; color: var(--accent); }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+td { padding: 6px 12px; vertical-align: top; border-bottom: 1px dashed var(--line); }
+tr:last-child td { border-bottom: 0; }
+td.k { width: 50%; }
+td.d { color: var(--fg); overflow-wrap: anywhere; }
+.alt { display: block; }
+.alt + .alt { margin-top: 4px; }
+.or { color: var(--muted); font-size: 11px; display: block; margin-block: 1px; }
+/* Syntax chip: keycap look, multi-line safe, click to copy. */
+.src { font-family: var(--mono); font-size: 11.5px; font-weight: 500; background: var(--cap); border: 1px solid var(--cap-line);
+  border-bottom-width: 2px; padding: 1px 6px; display: inline-block; max-width: 100%; line-height: 1.55;
+  white-space: pre-wrap; overflow-wrap: anywhere; cursor: copy; }
+.src:hover, .src:focus-visible { border-color: var(--accent); outline: 0; }
+.src.ok { border-color: var(--accent); background: var(--accent-soft); }
+.src .m { font-style: normal; color: var(--accent); }
+.src .sp { font-style: normal; color: var(--muted); opacity: .7; }
+/* Rendered result: proportional type so it reads as output, not source. */
+.out { display: block; margin-top: 3px; padding-left: 8px; border-left: 2px solid var(--accent-soft);
+  font-family: var(--sans); font-size: 13px; color: var(--fg); }
+.out code, .out kbd { font-family: var(--mono); font-size: 11.5px; background: var(--cap); border: 1px solid var(--cap-line); padding: 0 4px; }
+.out kbd { border-bottom-width: 2px; }
+.out a { color: var(--accent); }
+.out mark { background: var(--mark); color: inherit; padding: 0 2px; }
+.out .spoil { background: var(--fg); color: var(--fg); padding: 0 3px; }
+.out .subt { font-size: 11px; color: var(--muted); }
+.out hr { border: 0; border-top: 2px solid var(--line); margin: 8px 0; }
+.out blockquote { margin: 0; padding-left: 8px; border-left: 3px solid var(--line); color: var(--muted); }
+.out .h1 { font-size: 20px; font-weight: 600; } .out .h2 { font-size: 17px; font-weight: 600; }
+.out .h3 { font-size: 15px; font-weight: 600; } .out .h4 { font-size: 13px; font-weight: 600; }
+.out .alert { border-left-color: var(--accent); color: var(--fg); }
+.out .alert b { color: var(--accent); font-weight: 600; }
+.out table { width: auto; table-layout: auto; font-size: 12px; }
+.out th, .out td { border: 1px solid var(--line); padding: 1px 8px; }
+.out th { font-weight: 600; }
+.tag { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid currentColor;
+  padding: 0 4px; margin-left: 6px; white-space: nowrap; }
+.tag.gfm { color: var(--accent); }
+.tag.gh { color: var(--gh); }
+.tag.obs { color: var(--obs); }
+.tag.chat { color: var(--chat); }
+.tag.docs { color: var(--docs); }
+.tag.ext { color: var(--warn); }
+.tag.html { color: var(--muted); }
+.legend .tag { margin-left: 0; margin-right: 4px; }
+.tag.cm { color: var(--fg); }
+/* Tag toggles: pressed = rows with that tag are shown. */
+.tg { font: inherit; font-size: 12px; color: var(--muted); background: none; border: 1px solid transparent;
+  padding: 2px 6px; margin: -3px -7px; cursor: pointer; white-space: nowrap; }
+.tg:hover, .tg:focus-visible { border-color: var(--line); outline: 0; }
+.tg[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
+.tg[aria-pressed="false"] .tag { border-style: dashed; }
+.meta .src { cursor: default; padding: 0 5px; line-height: 1.3; }
+tr.hide, section.hide { display: none; }
+.empty { color: var(--muted); padding: 24px 0; }
+footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+footer a { color: var(--accent); }
+.hdr-r { display: flex; align-items: end; gap: 16px; }
+.theme { font: inherit; font-size: 12px; color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+.theme:hover, .theme:focus-visible { border-color: var(--accent); color: var(--accent); outline: 0; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (max-width: 520px) { td.k { width: 48%; } header { align-items: start; } .meta { text-align: left; } }
+body{margin:0}
+</style>
+<script>
+// Apply saved theme before first paint to avoid a flash.
+try { const t = localStorage.getItem("md-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Markdown<span>/</span>syntax</h1>
+    <div class="hdr-r">
+      <div class="meta">CommonMark + GitHub + Obsidian + chat + docs tools<br>click any syntax to copy it<br><span class="src">·</span> = space</div>
+      <button class="theme" id="theme" type="button" aria-label="Toggle light / dark mode"></button>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="search"><label for="q">&gt;</label><input id="q" type="search" placeholder="filter: bold, table, **, [[, callout ..." autocomplete="off" spellcheck="false"></div>
+    <div class="legend" id="tags">
+      <button type="button" class="tg" data-tag="cm" aria-pressed="true"><span class="tag cm">cm</span>CommonMark</button>
+      <button type="button" class="tg" data-tag="gfm" aria-pressed="true"><span class="tag gfm">gfm</span>GitHub Flavored</button>
+      <button type="button" class="tg" data-tag="gh" aria-pressed="true"><span class="tag gh">gh</span>GitHub extras</button>
+      <button type="button" class="tg" data-tag="obs" aria-pressed="true"><span class="tag obs">obs</span>Obsidian only</button>
+      <button type="button" class="tg" data-tag="chat" aria-pressed="true"><span class="tag chat">chat</span>chat + forums</button>
+      <button type="button" class="tg" data-tag="docs" aria-pressed="true"><span class="tag docs">docs</span>docs tools</button>
+      <button type="button" class="tg" data-tag="ext" aria-pressed="true"><span class="tag ext">ext</span>varies by app</button>
+      <button type="button" class="tg" data-tag="html" aria-pressed="true"><span class="tag html">html</span>raw HTML</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>no match.</p>
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <footer>Sources: <a href="https://spec.commonmark.org/0.31.2/">CommonMark spec 0.31.2</a>, <a href="https://github.github.com/gfm/">GitHub Flavored Markdown spec</a>, <a href="https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax">GitHub Docs</a>, <a href="https://www.markdownguide.org/extended-syntax/">Markdown Guide</a>, <a href="https://obsidian.md/help/obsidian-flavored-markdown">Obsidian Help</a>, <a href="https://docs.slack.dev/messaging/formatting-message-text">Slack</a>, <a href="https://support.discord.com/hc/en-us/articles/210298617">Discord</a>, <a href="https://support.microsoft.com/en-US/teams/chat/use-markdown-formatting-in-microsoft-teams">Teams</a>, <a href="https://core.telegram.org/bots/api#markdownv2-style">Telegram</a>, <a href="https://squidfunk.github.io/mkdocs-material/reference/admonitions/">MkDocs Material</a>, <a href="https://docusaurus.io/docs/markdown-features/admonitions">Docusaurus</a>, <a href="https://vitepress.dev/guide/markdown">VitePress</a>, <a href="https://gitbook.com/docs/creating-content/blocks/hint">GitBook</a>, <a href="https://gohugo.io/content-management/shortcodes/">Hugo</a>, <a href="https://docs.gitlab.com/user/markdown/">GitLab</a>, <a href="https://learn.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance">Azure DevOps</a>. Untagged syntax works in every CommonMark renderer. Code: <a href="https://klggr.de">kollege-gruenfeld.de</a></footer>
+</div>
+
+<script>
+// Theme switch: explicit choice overrides the system setting and is remembered.
+const root = document.documentElement, themeBtn = document.getElementById("theme");
+const sysDark = matchMedia("(prefers-color-scheme: dark)");
+const current = () => root.dataset.theme || (sysDark.matches ? "dark" : "light");
+const label = () => { themeBtn.textContent = current() === "dark" ? "[ light ]" : "[ dark ]"; };
+themeBtn.addEventListener("click", () => {
+  const t = current() === "dark" ? "light" : "dark";
+  root.dataset.theme = t;
+  try { localStorage.setItem("md-theme", t); } catch (e) {}
+  label();
+});
+sysDark.addEventListener("change", label);
+label();
+
+// Row: [syntax, description, rendered HTML?, tag?]. Syntax is a string or an array of alternatives;
+// "\n" breaks lines, "·" shows a significant space (copied as a real space). Tags: gfm, gh, obs, chat, docs, ext, html.
+const DATA = [
+  ["Headings", [
+    ["# Heading 1", "Heading level 1 (space after # required)", '<span class="h1">Heading 1</span>'],
+    ["## Heading 2", "Heading level 2", '<span class="h2">Heading 2</span>'],
+    ["### Heading 3", "Heading level 3", '<span class="h3">Heading 3</span>'],
+    [["#### H4", "##### H5", "###### H6"], "Heading levels 4 to 6"],
+    ["Heading\n=======", "Level 1, underline style", '<span class="h1">Heading</span>'],
+    ["Heading\n-------", "Level 2, underline style", '<span class="h2">Heading</span>'],
+    ["## Heading {#my-id}", "Custom heading ID (not GitHub / Obsidian)", "", "ext"],
+  ]],
+  ["Emphasis", [
+    [["*italic*", "_italic_"], "Italic", "<em>italic</em>"],
+    [["**bold**", "__bold__"], "Bold (Slack, WhatsApp: *bold*)", "<strong>bold</strong>"],
+    ["***bold italic***", "Bold and italic", "<strong><em>bold italic</em></strong>"],
+    ["**bold _and_ italic**", "Nested emphasis", "<strong>bold <em>and</em> italic</strong>"],
+    ["un*believ*able", "Emphasis inside a word: use *, not _", "un<em>believ</em>able"],
+    [["~~strike~~", "~strike~"], "Strikethrough (single ~ not in Obsidian)", "<del>strike</del>", "gfm"],
+    ["==highlight==", "Highlight (Obsidian yes, GitHub no)", "<mark>highlight</mark>", "ext"],
+    [["H~2~O", "X^2^"], "Sub- / superscript (not GitHub / Obsidian)", "H<sub>2</sub>O · X<sup>2</sup>", "ext"],
+    [["<sub>2</sub>", "<sup>2</sup>"], "Sub- / superscript, works on GitHub", "H<sub>2</sub>O · X<sup>2</sup>", "html"],
+    ["<ins>underline</ins>", "Underline (Markdown has none)", "<ins>underline</ins>", "html"],
+  ]],
+  ["Paragraphs + breaks", [
+    ["Line one\n\nLine two", "New paragraph: blank line between"],
+    ["Line one··\nLine two", "Line break: two trailing spaces", "Line one<br>Line two"],
+    ["Line one\\\nLine two", "Line break: backslash at line end", "Line one<br>Line two"],
+    ["Line one<br>Line two", "Line break: HTML tag", "Line one<br>Line two", "html"],
+    ["Line one\nLine two", "Single newline: joined into one line (Obsidian: line break, unless Strict line breaks is on)", "Line one Line two"],
+    [["---", "***", "___"], "Horizontal rule (blank line above, or --- turns text into a heading)", "<hr>"],
+  ]],
+  ["Lists", [
+    [["- Item", "* Item", "+ Item"], "Bullet list", "• Item"],
+    ["1. Item\n2. Item", "Numbered list", "1. Item<br>2. Item"],
+    ["1. Item\n1. Item", "Numbering is automatic, 1. on every line works", "1. Item<br>2. Item"],
+    ["3. Item", "List starts at 3", "3. Item"],
+    ["1) Item", "Numbered list, parenthesis delimiter"],
+    ["- Item\n··- Nested", "Nested list: indent to the parent's text", "• Item<br>&emsp;◦ Nested"],
+    ["- Item\n\n··Paragraph", "Second paragraph in an item: blank line + indent"],
+    ["- [ ] Task\n- [x] Done", "Task list", "☐ Task<br>☑ Done", "gfm"],
+  ]],
+  ["Links", [
+    ["[Text](https://example.com)", "Inline link", '<a href="#">Text</a>'],
+    ['[Text](https://example.com "Title")', "Link with hover title", '<a href="#" title="Title">Text</a>'],
+    ["<https://example.com>", "Autolink", '<a href="#">https://example.com</a>'],
+    ["https://example.com", "Bare URL becomes a link", '<a href="#">https://example.com</a>', "gfm"],
+    ["<mail@example.com>", "Email link", '<a href="#">mail@example.com</a>'],
+    ["[Text][ref]\n[ref]: https://example.com", "Reference link, definition anywhere in the file", '<a href="#">Text</a>'],
+    ["[ref]", "Shortcut reference, text = label", '<a href="#">ref</a>'],
+    ["[Text](#my-heading)", "Link to a heading (lowercase, spaces → -)", '<a href="#">Text</a>', "gh"],
+    ["[Text](docs/file.md)", "Relative link to a file in the repo", '<a href="#">Text</a>'],
+    ["[Text](My%20Note.md)", "Spaces in a link target: encode as %20", '<a href="#">Text</a>'],
+  ]],
+  ["Images", [
+    ["![Alt text](image.png)", "Image, alt text for screen readers"],
+    ['![Alt](image.png "Title")', "Image with hover title"],
+    ["[![Alt](image.png)](https://example.com)", "Linked image"],
+    ["![Alt][logo]\n[logo]: image.png", "Reference image"],
+    ['<img src="image.png" width="200">', "Image with size (Markdown can't size)", "", "html"],
+  ]],
+  ["Code", [
+    ["`code`", "Inline code", "<code>code</code>"],
+    ["`` a ` b ``", "Inline code containing a backtick", "<code>a ` b</code>"],
+    ["```\ncode block\n```", "Fenced code block"],
+    ["```js\nconst a = 1;\n```", "Code block with syntax highlighting"],
+    ["~~~\ncode block\n~~~", "Fenced code block, tilde fence"],
+    ["····code", "Indented code block (4 spaces)"],
+    ["````\n```\n````", "Show a fence: wrap in a longer fence"],
+    ["```diff\n- old\n+ new\n```", "Diff, removed / added lines colored"],
+  ]],
+  ["Blockquotes", [
+    ["> Quote", "Blockquote", "<blockquote>Quote</blockquote>"],
+    ["> Line one\n>\n> Line two", "Quote with several paragraphs"],
+    ["> Quote\n>> Nested", "Nested quote", "<blockquote>Quote<blockquote>Nested</blockquote></blockquote>"],
+    ["> - List\n> **bold**", "Other Markdown works inside quotes"],
+    ["> [!NOTE]\n> Text", "Alert: NOTE, TIP, IMPORTANT, WARNING, CAUTION (also GitLab, VitePress; Obsidian: callout)", '<blockquote class="alert"><b>ⓘ Note</b><br>Text</blockquote>', "gh"],
+  ]],
+  ["Tables", [
+    ["| A | B |\n|---|---|\n| 1 | 2 |", "Table: header row, delimiter row, body rows",
+      "<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>", "gfm"],
+    ["| L | C | R |\n|:--|:-:|--:|", "Column alignment: left, center, right", "", "gfm"],
+    ["A | B\n--|--\n1 | 2", "Outer pipes and column widths are optional", "", "gfm"],
+    ["| a \\| b |", "Pipe inside a cell: escape it", "<code>a | b</code>", "gfm"],
+    ["| `code` | **bold** |", "Inline formatting works in cells", "", "gfm"],
+    ["| one<br>two |", "Line break inside a cell", "", "html"],
+  ]],
+  ["Escaping + entities", [
+    ["\\*not italic\\*", "Backslash escapes any ASCII punctuation", "*not italic*"],
+    ["\\# Not a heading", "Escape a character at line start", "# Not a heading"],
+    ["1986\\. A year", "Stop a number from starting a list", "1986. A year"],
+    ["snake_case_name", "Underscores inside words stay literal", "snake_case_name"],
+    ["&copy; &rarr; &lt;", "HTML entities", "© → &lt;"],
+  ]],
+  ["Extended", [
+    ["Text[^1]\n\n[^1]: The note.", "Footnote, listed at the bottom (GitHub, Obsidian)", "Text<sup><a href=\"#\">1</a></sup>", "ext"],
+    ["Term\n: Definition", "Definition list (not GitHub / Obsidian)", "", "ext"],
+    ["---\ntitle: Page\n---", "YAML front matter, first lines of the file (Obsidian: properties)", "", "ext"],
+    [":smile: :+1:", "Emoji shortcode", "😄 👍", "gh"],
+    ["$E = mc^2$", "Inline math (LaTeX, Obsidian too)", "<em>E</em> = <em>mc</em><sup>2</sup>", "gh"],
+    [["$$\n\\sqrt{x}\n$$", "```math\n\\sqrt{x}\n```"], "Math block (LaTeX, $$ in Obsidian too)", "", "gh"],
+    ["```mermaid\ngraph LR\n··A --> B\n```", "Mermaid diagram (Obsidian too)", "", "gh"],
+    ["@username", "Mention a user or team", "<strong>@username</strong>", "gh"],
+    [["#123", "owner/repo#123"], "Link an issue or pull request", '<a href="#">#123</a>', "gh"],
+  ]],
+  ["Obsidian links + embeds", [
+    ["[[Note]]", "Internal link (wikilink) to a note", '<a href="#">Note</a>', "obs"],
+    ["[[Note|Text]]", "Wikilink with display text", '<a href="#">Text</a>', "obs"],
+    ["[[Note#Heading]]", "Link to a heading in a note", '<a href="#">Note &gt; Heading</a>', "obs"],
+    ["[[#Heading]]", "Link to a heading in the same note", '<a href="#">Heading</a>', "obs"],
+    ["Some text ^my-id", "Block ID: space, caret, ID at the end of a paragraph", "", "obs"],
+    ["[[Note#^my-id]]", "Link to a block", '<a href="#">Note &gt; ^my-id</a>', "obs"],
+    [["![[Note]]", "![[Note#Heading]]"], "Embed a note or one section of it", "", "obs"],
+    ["![[Note#^my-id]]", "Embed a block", "", "obs"],
+    ["![[image.png]]", "Embed an image, audio or video file", "", "obs"],
+    [["![[image.png|200]]", "![[image.png|200x100]]"], "Image width, or width x height", "", "obs"],
+    ["![Alt|200](image.png)", "Resize a Markdown image", "", "obs"],
+    [["![[doc.pdf#page=3]]", "![[doc.pdf#height=400]]"], "Embed a PDF at a page / with a height", "", "obs"],
+  ]],
+  ["Obsidian callouts + more", [
+    ["> [!tip] Title\n> Text", "Callout with custom title. Types: note, abstract, info, todo, tip, success, question, warning, failure, danger, bug, example, quote",
+      '<blockquote class="alert"><b>✦ Title</b><br>Text</blockquote>', "obs"],
+    [["> [!faq]- Title", "> [!faq]+ Title"], "Foldable callout: - collapsed, + expanded", '<blockquote class="alert"><b>Title ▸</b></blockquote>', "obs"],
+    ["> [!note]\n> > [!warning]\n> > Text", "Nested callouts", "", "obs"],
+    [["#tag", "#nested/tag"], "Tag, needs at least one non-digit (#y1984, not #1984)", '<a href="#">#tag</a>', "obs"],
+    ["---\ntags:\n··- project\naliases:\n··- Alt name\n---", "Properties: tags, aliases, cssclasses", "", "obs"],
+    [["%%comment%%", "%%\nBlock comment\n%%"], "Comment, visible only in editing view", "", "obs"],
+    ["Text^[Inline note.]", "Inline footnote (reading view only)", "Text<sup><a href=\"#\">1</a></sup>", "obs"],
+    [["- [?] Task", "- [-] Task"], "Any character in [ ] marks a task done", "☑ Task", "obs"],
+    ["```query\ntag:#project\n```", "Embed live search results", "", "obs"],
+  ]],
+  ["Chat + forums", [
+    ["*bold*", "Bold in Slack, Teams, WhatsApp, Telegram bots (one asterisk)", "<strong>bold</strong>", "chat"],
+    ["~strike~", "Strikethrough in Slack, Teams, WhatsApp, Telegram bots", "<del>strike</del>", "chat"],
+    ["__underline__", "Underline in Discord, Telegram bots (not bold)", "<ins>underline</ins>", "chat"],
+    ["||spoiler||", "Spoiler in Discord, Telegram bots", '<span class="spoil">spoiler</span>', "chat"],
+    [["# Big", "## Medium", "### Small"], "Headings in Discord, Teams: levels 1 to 3 only", "", "chat"],
+    ["-# Small text", "Discord: subtext, one line each", '<span class="subt">Small text</span>', "chat"],
+    [">>> Quote\nto the end", "Discord: quote everything after it", "<blockquote>Quote<br>to the end</blockquote>", "chat"],
+    ["[Text](https://example.com)", "Link text: Discord, Teams, Telegram bots. Not in Slack, WhatsApp", '<a href="#">Text</a>', "chat"],
+    ["<https://example.com|Text>", "Slack API / bots: link with text", '<a href="#">Text</a>', "chat"],
+    ["<https://example.com>", "Discord: link without preview embed", '<a href="#">https://example.com</a>', "chat"],
+    ["```monospace```", "WhatsApp: monospace text", "<code>monospace</code>", "chat"],
+    ["- Item\n1. Item\n> Quote", "WhatsApp: lists and quotes", "", "chat"],
+    ["**>Quote\n>Hidden lines||", "Telegram bots: expandable quote", "", "chat"],
+    [">!spoiler!<", "Reddit: spoiler", '<span class="spoil">spoiler</span>', "chat"],
+    [["super^script", "^(two words)"], "Reddit: superscript", "super<sup>script</sup>", "chat"],
+    [["u/name", "r/subreddit"], "Reddit: link a user / subreddit", '<a href="#">u/name</a>', "chat"],
+    [">! spoiler", "Stack Overflow: spoiler block", '<span class="spoil">spoiler</span>', "chat"],
+  ]],
+  ["Docs tools + dev platforms", [
+    ['!!! note "Title"\n····Text', "MkDocs Material: admonition, content indented 4 spaces", '<blockquote class="alert"><b>✎ Title</b><br>Text</blockquote>', "docs"],
+    [["??? note", "???+ note"], "MkDocs Material: collapsible admonition, + = open", "", "docs"],
+    ['=== "Tab 1"\n····Text\n=== "Tab 2"\n····Text', "MkDocs Material: content tabs", "", "docs"],
+    [":::note[Title]\nText\n:::", "Docusaurus: admonition: note, tip, info, warning, danger", '<blockquote class="alert"><b>ⓘ Title</b><br>Text</blockquote>', "docs"],
+    ["::: tip Title\nText\n:::", "VitePress: container: info, tip, warning, danger, details", '<blockquote class="alert"><b>✦ Title</b><br>Text</blockquote>', "docs"],
+    ["::: code-group\n```js [a.js]\n```\n```ts [a.ts]\n```\n:::", "VitePress: code blocks as tabs", "", "docs"],
+    ["```js{1,4-6}", "VitePress: highlight lines in a code block", "", "docs"],
+    ['{% hint style="info" %}\nText\n{% endhint %}', "GitBook: hint: info, success, warning, danger", "", "docs"],
+    [["{{< youtube ID >}}", "{{% name %}}"], "Hugo: shortcode, % = content is Markdown", "", "docs"],
+    ["[TOC]", "Table of contents: MkDocs, GitLab", "", "docs"],
+    ["[[_TOC_]]", "Table of contents: GitLab, Azure DevOps", "", "docs"],
+    ["[[toc]]", "Table of contents: VitePress", "", "docs"],
+    ["[[_TOSP_]]", "Azure DevOps wiki: list of subpages", "", "docs"],
+    [["::include{file=part.md}", "<!--@include: ./part.md-->"], "Include another file: GitLab, VitePress", "", "docs"],
+    ["{+ added +}\n[- removed -]", "GitLab: inline diff", '<ins>added</ins> <del>removed</del>', "docs"],
+    [">>>\nQuote\n>>>", "GitLab: multi-line quote", "<blockquote>Quote</blockquote>", "docs"],
+    ["`#F00`", "GitLab: colour chip in inline code", '<code><span style="color:#f00">■</span> #F00</code>', "docs"],
+    [["!123", "~label", "%v1.0"], "GitLab: merge request, label, milestone", "", "docs"],
+    ["::: mermaid\ngraph LR\n··A --> B\n:::", "Azure DevOps wiki: Mermaid diagram", "", "docs"],
+  ]],
+  ["HTML in Markdown", [
+    ["<!-- Comment -->", "Comment, not rendered", "", "html"],
+    ["<details>\n<summary>More</summary>\n\nHidden text\n</details>", "Collapsible section (blank line before Markdown, Obsidian renders none inside)", "▸ More", "html"],
+    ["<kbd>Ctrl</kbd>+<kbd>C</kbd>", "Keyboard keys", "<kbd>Ctrl</kbd>+<kbd>C</kbd>", "html"],
+    ['<p align="center">Text</p>', "Centered block (GitHub README)", "", "html"],
+  ]],
+];
+
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+// Highlight Markdown punctuation in the source so the markup stands out from the content.
+const WHOLE = /^(<!--.*?-->|<\/?[a-z][^>]*>|&[a-z0-9#]+;)/i;
+function hl(src) {
+  let out = "", lineStart = true;
+  for (let i = 0; i < src.length;) {
+    const rest = src.slice(i), c = src[i], p = src[i - 1] || " ", n = src[i + 1] || " ";
+    const whole = rest.match(WHOLE), num = lineStart && rest.match(/^\d+[.)](?= )/);
+    let tok = c, mark = false;
+    if (whole && !/:\/\/|@/.test(whole[0])) { tok = whole[0]; mark = true; }
+    else if (num) { tok = num[0]; mark = true; }
+    else if ("#*~^[]()!>|`<$\\{}%?".includes(c)) mark = true;
+    else if ("-+_".includes(c)) mark = !(/\w/.test(p) && /\w/.test(n));
+    else if (c === "=") mark = p === "=" || n === "=";
+    else if (c === ":") mark = !rest.startsWith("://");
+    out += c === "·" ? '<i class="sp">·</i>' : mark ? '<i class="m">' + esc(tok) + "</i>" : esc(tok);
+    if (c === "\n") lineStart = true; else if (c !== " " && c !== "·") lineStart = false;
+    i += tok.length;
+  }
+  return out;
+}
+function syntax(spec) {
+  return [].concat(spec).map(s => '<span class="alt"><code class="src" tabindex="0" title="click to copy">' + hl(s) + "</code></span>")
+    .join('<span class="or">or</span>');
+}
+const grid = document.getElementById("grid");
+DATA.forEach(([title, rows]) => {
+  const s = document.createElement("section");
+  s.innerHTML = "<h2><span>" + esc(title) + "</span><b>" + rows.length + "</b></h2><table><tbody>" +
+    rows.map(([k, d, out, tag]) =>
+      '<tr data-tag="' + (tag || "cm") + '"><td class="k">' + syntax(k) + '</td><td class="d">' + esc(d) +
+      (tag ? '<span class="tag ' + tag + '">' + tag + "</span>" : "") +
+      (out ? '<span class="out">' + out + "</span>" : "") + "</td></tr>").join("") + "</tbody></table>";
+  grid.appendChild(s);
+});
+
+// Masonry: keep section order, put each visible section into the currently shortest column.
+const sections = [...grid.querySelectorAll("section")];
+let frame = 0;
+function layout() {
+  const n = Math.max(1, Math.floor((grid.clientWidth + 16) / (380 + 16)));
+  const cols = Array.from({ length: n }, () => Object.assign(document.createElement("div"), { className: "col" }));
+  grid.replaceChildren(...cols);
+  sections.forEach(s => {
+    if (s.classList.contains("hide")) { cols[n - 1].appendChild(s); return; }
+    const shortest = cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a));
+    shortest.appendChild(s);
+  });
+}
+const relayout = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(layout); };
+layout();
+addEventListener("resize", relayout);
+if (document.fonts) document.fonts.ready.then(relayout);
+
+// Copy a syntax chip on click or Enter; · goes to the clipboard as a real space.
+const live = document.getElementById("live");
+function copy(el) {
+  const text = el.textContent.replace(/·/g, " ");
+  const done = () => { el.classList.add("ok"); live.textContent = "copied"; setTimeout(() => el.classList.remove("ok"), 800); };
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
+}
+grid.addEventListener("click", e => { const el = e.target.closest(".src"); if (el) copy(el); });
+grid.addEventListener("keydown", e => {
+  const el = e.target.closest(".src");
+  if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); copy(el); }
+});
+
+// A row is shown when its tag is switched on and it matches the text filter.
+const q = document.getElementById("q"), empty = document.getElementById("empty"), tags = document.getElementById("tags");
+const off = new Set();
+tags.addEventListener("click", e => {
+  const b = e.target.closest(".tg");
+  if (!b) return;
+  const on = off.has(b.dataset.tag);
+  if (on) off.delete(b.dataset.tag); else off.add(b.dataset.tag);
+  b.setAttribute("aria-pressed", on);
+  apply();
+});
+q.addEventListener("input", apply);
+function apply() {
+  const t = q.value.trim().toLowerCase().replace(/\s+/g, " ");
+  let any = false;
+  grid.querySelectorAll("section").forEach(sec => {
+    const secTitle = sec.querySelector("h2 span").textContent.toLowerCase();
+    let shown = 0;
+    sec.querySelectorAll(":scope > table > tbody > tr").forEach(tr => {
+      const text = tr.textContent.toLowerCase().replace(/\s+/g, " ");
+      const keyText = tr.querySelector(".k").textContent.toLowerCase();
+      const hit = !off.has(tr.dataset.tag) &&
+        (!t || text.includes(t) || keyText.replace(/\s/g, "").includes(t.replace(/\s/g, "")) || secTitle.includes(t));
+      tr.classList.toggle("hide", !hit);
+      if (hit) shown++;
+    });
+    sec.classList.toggle("hide", shown === 0);
+    if (shown) any = true;
+  });
+  empty.hidden = any;
+  layout();
+}
+</script>
+
+</body>
+</html>
